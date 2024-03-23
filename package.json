@@ -13,8 +13,9 @@
     "zustand": "^4.5.2"
   },
   "scripts": {
-    "extension-dev": "webpack -w --config webpack.config.ts",
-    "extension-build": "webpack --config webpack.config.ts",
+    "extension-dev": "cd src/extension && webpack -w --config webpack.config.ts",
+    "extension-build": "cd src/extension && webpack --config webpack.config.ts",
+    
     "program-dev": "cd src/program && cargo run --target-dir ../../dist/program",
     "program-build": "cd src/program && cargo build --target-dir ../../dist/program"
   },

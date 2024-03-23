@@ -6,16 +6,16 @@ import { Configuration } from "webpack"
 
 const config: Configuration = {
     entry: {
-        index: {import: "./src/extension/app/index.tsx", filename: "app/[name].js"},
-        background: {import: "./src/extension/scripts/background.ts", filename: "scripts/[name].js"},
-        findplaylists: {import: "./src/extension/scripts/find-playlists.ts", filename: "scripts/[name].js"},
+        index: {import: "./app/index.tsx", filename: "app/[name].js"},
+        background: {import: "./scripts/background.ts", filename: "scripts/[name].js"},
+        findplaylists: {import: "./scripts/find-playlists.ts", filename: "scripts/[name].js"},
     },
     mode: "production",
     module: {
         rules: [
             {
                 test: /\.tsx?$/,
-                include: path.resolve(__dirname, "src"),
+                include: path.resolve(__dirname, "."),
                 use: [{
                     loader: "ts-loader",
                     options: {
@@ -25,7 +25,7 @@ const config: Configuration = {
             },
             {
                 test: /\.css$/i,
-                include: path.resolve(__dirname, "src"),
+                include: path.resolve(__dirname, "."),
                 use: [
                     "style-loader",
                     "css-loader",
@@ -38,9 +38,9 @@ const config: Configuration = {
         new ForkTsCheckerWebpackPlugin(),
         new CopyPlugin({
             patterns: [
-                { from: "src/extension/manifest.json", to: "manifest.json" },
-                { from: "src/extension/icons", to: "icons" },
-                { from: "node_modules/webextension-polyfill/dist/browser-polyfill.min.js", to: "scripts/browser-polyfill.js" },
+                { from: "manifest.json", to: "manifest.json" },
+                { from: "icons", to: "icons" },
+                { from: "../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js", to: "scripts/browser-polyfill.js" },
             ],
         }),
         ...getHtmlPlugins(["index"])
@@ -52,7 +52,7 @@ const config: Configuration = {
         extensions: [".tsx", ".ts", ".js"],
     },
     output: {
-        path: path.join(__dirname, "dist/extension"),
+        path: path.join(__dirname, "../../dist/extension"),
         filename: "[name].js",
         clean: true
     },
