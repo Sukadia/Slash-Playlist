@@ -1,0 +1,39 @@
+{
+  "manifest_version": 3,
+  "name": "Slash Playlist",
+  "description": "Download Youtube playlists into organized folders.",
+  "author": "Sukadia",
+  "version": "0.1.0",
+  
+  "permissions": ["nativeMessaging"],
+
+  "host_permissions": [
+    "*://localhost/*"
+  ],
+
+  "icons": {
+    "32": "icons/32.png",
+    "128": "icons/128.png"
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "slash_playlist@sukadia.dev"
+    }
+  },
+
+  "background": {
+    "scripts": ["scripts/browser-polyfill.js", "scripts/background.js"]
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*.youtube.com/*"],
+      "js": ["scripts/browser-polyfill.js", "scripts/findplaylists.js"]
+    }
+  ],
+
+  "action": {
+      "default_popup": "./app/index.html"
+  }
+}
