@@ -6,7 +6,7 @@ async function checkPage(){
     let downloadplaylists = []
     for (let playlist of playlists){
         const playlistname = playlist.getAttribute("title")
-        if (playlistname?.indexOf("/") != -1){
+        if (playlistname?.indexOf("/") == 0){
             console.log(playlistname)
             const playlistlink = playlist.getAttribute("href")!
             downloadplaylists.push(playlistlink.split("=")[1])
