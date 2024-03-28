@@ -6,7 +6,8 @@ import { Configuration } from "webpack"
 
 const config: Configuration = {
     entry: {
-        index: {import: "./app/index.tsx", filename: "app/[name].js"},
+        popup_index: {import: "./app/popup_index.tsx", filename: "app/[name].js"},
+        settings_index: {import: "./app/settings_index.tsx", filename: "app/[name].js"},
         background: {import: "./scripts/background.ts", filename: "scripts/[name].js"},
         findplaylists: {import: "./scripts/find-playlists.ts", filename: "scripts/[name].js"},
     },
@@ -35,7 +36,15 @@ const config: Configuration = {
         ],
     },
     plugins: [
-        new ForkTsCheckerWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            filename: `app/popup_index.html`,
+            chunks: ["popup_index"],
+        }),
+        new HtmlWebpackPlugin({
+            title: "/Playlist - Settings",
+            filename: `app/settings_index.html`,
+            chunks: ["settings_index"],
+        }),
         new CopyPlugin({
             patterns: [
                 { from: "manifest.json", to: "manifest.json" },
@@ -43,7 +52,7 @@ const config: Configuration = {
                 { from: "../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js", to: "scripts/browser-polyfill.js" },
             ],
         }),
-        ...getHtmlPlugins(["index"])
+        new ForkTsCheckerWebpackPlugin(),
     ],
     watchOptions: {
         ignored: ["node_modules","dist"],
@@ -57,16 +66,5 @@ const config: Configuration = {
         clean: true
     },
 };
-
-function getHtmlPlugins(chunks: string[]) {
-    return chunks.map(
-        (chunk) =>
-            new HtmlWebpackPlugin({
-                title: "React extension",
-                filename: `app/${chunk}.html`,
-                chunks: [chunk],
-            })
-    );
-}
 
 export default config

@@ -1,8 +1,9 @@
-import Browser from "webextension-polyfill"
+import Browser, { runtime } from "webextension-polyfill"
 import { useEffect } from "react"
-import { useAppState } from "./AppState"
+import { useAppState } from "../AppState"
+import { Icon } from "@iconify/react"
 
-export default function App() {
+export default function Popup() {
 
   const currentStatus = useAppState((state) => state.status)
   const currentAction = useAppState((state) => state.action)
@@ -23,6 +24,10 @@ export default function App() {
     }
   }
 
+  async function handleSettingsClick(){
+    await runtime.openOptionsPage()
+  }
+
   useEffect(() => {
     async function onMessage(message: any){
       if (message.command == "playlists_found"){
@@ -36,14 +41,19 @@ export default function App() {
 
   return (
     <main className="flex flex-col gap-1 p-2 select-none">
-      <div className="flex flex-col items-center mx-auto justify-center gap-1 mb-1" onClick={handleClick}>
+      <div className="flex flex-col items-center mx-auto justify-center gap-1 mb-1">
         <img src="../icons/128.png" width={128} height={128} alt="Sukadia logo" className="w-16 h-16"/>
         <div className="flex flex-row text-xs gap-1">
           <div>Status:</div>
           <div className="text-yellow-400">{currentStatus}</div>
         </div>
       </div>
-      <div className="flex items-center rounded-lg active:bg-slate-500 bg-slate-600 hover:bg-slate-700 w-32 h-8 mx-auto cursor-pointer justify-center" onClick={handleClick}>{currentAction}</div>
+      <div className="flex flex-row mb-1 h-8 w-full">
+        <div className="flex items-center rounded-l-lg active:bg-slate-500 bg-slate-600 hover:bg-slate-700 w-28 h-8 cursor-pointer justify-center" onClick={handleClick}>{currentAction}</div>
+        <div className="flex w-8 h-8 active:bg-gray-700 bg-gray-800 hover:bg-gray-900 rounded-r-lg items-center" onClick={handleSettingsClick}>
+          <Icon icon="tabler:settings-exclamation" className="w-7 h-7 mx-auto"/>
+        </div>
+      </div>
     </main>
   )
 }

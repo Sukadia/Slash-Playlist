@@ -15,7 +15,6 @@
   "scripts": {
     "extension-dev": "cd src/extension && webpack -w --config webpack.config.ts",
     "extension-build": "cd src/extension && webpack --config webpack.config.ts",
-    
     "program-dev": "cd src/program && cargo run --target-dir ../../dist/program",
     "program-build": "cd src/program && cargo build --target-dir ../../dist/program"
   },
@@ -37,6 +36,7 @@
     ]
   },
   "devDependencies": {
+    "@iconify/react": "^4.1.1",
     "@types/fork-ts-checker-webpack-plugin": "^0.4.5",
     "@types/node": "^20.11.30",
     "@types/webpack": "^5.28.5",

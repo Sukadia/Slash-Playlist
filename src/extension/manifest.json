@@ -5,7 +5,7 @@
   "author": "Sukadia",
   "version": "0.1.0",
   
-  "permissions": ["nativeMessaging"],
+  "permissions": ["storage"],
 
   "host_permissions": [
     "*://localhost/*"
@@ -34,6 +34,11 @@
   ],
 
   "action": {
-      "default_popup": "./app/index.html"
+      "default_popup": "./app/popup_index.html"
+  },
+
+  "options_ui": {
+    "page": "./app/settings_index.html",
+    "open_in_tab": true
   }
 }
