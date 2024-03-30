@@ -10,7 +10,7 @@ use rayon::prelude::*;
 #[derive(Deserialize)]
 struct RequestBody {
     playlistids: Vec<String>,
-    musicdirectory: String
+    config_path: String
 }
 
 fn main() {
@@ -37,7 +37,7 @@ fn main() {
             };
 
             // Get or create music directory & log file
-            let musicdirectory = body.musicdirectory;
+            let musicdirectory = body.config_path;
             fs::create_dir_all(&musicdirectory).expect("Failed to get Music directory");
             let mut logfile = OpenOptions::new().write(true).read(true).create(true).open(format!("{}/{}",&musicdirectory,".log.json")).expect("Failed to open log file");
             let logtext = &mut String::new();
