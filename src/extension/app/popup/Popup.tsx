@@ -1,4 +1,4 @@
-import Browser, { runtime } from "webextension-polyfill"
+import Browser from "webextension-polyfill"
 import { useEffect } from "react"
 import { useAppState } from "../AppState"
 import { Icon } from "@iconify/react"
@@ -25,7 +25,7 @@ export default function Popup() {
   }
 
   async function handleSettingsClick(){
-    await runtime.openOptionsPage()
+    await Browser.runtime.openOptionsPage()
   }
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function Popup() {
 })
 
   return (
-    <main className="flex flex-col gap-1 p-2 select-none">
+    <main className="flex flex-col gap-1 p-2 select-none w-40">
       <div className="flex flex-col items-center mx-auto justify-center gap-1 mb-1">
         <img src="../icons/128.png" width={128} height={128} alt="Sukadia logo" className="w-16 h-16"/>
         <div className="flex flex-row text-xs gap-1">

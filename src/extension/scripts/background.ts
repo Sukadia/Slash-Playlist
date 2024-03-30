@@ -7,7 +7,7 @@ Browser.runtime.onMessage.addListener(async (message) => {
         const config = await loadConfig()
 
         const playlistids: string[] = message.playlistids
-        await window.fetch("http://localhost:33346/download", {
+        await fetch("http://localhost:33346/download", {
             method: "POST",
             body: JSON.stringify({
                 playlistids: playlistids,

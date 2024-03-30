@@ -48,8 +48,7 @@ const config: Configuration = {
         new CopyPlugin({
             patterns: [
                 { from: "manifest.json", to: "manifest.json" },
-                { from: "icons", to: "icons" },
-                { from: "../../node_modules/webextension-polyfill/dist/browser-polyfill.min.js", to: "scripts/browser-polyfill.js" },
+                { from: "icons", to: "icons" }
             ],
         }),
         new ForkTsCheckerWebpackPlugin(),
