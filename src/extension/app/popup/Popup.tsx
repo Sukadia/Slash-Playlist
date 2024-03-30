@@ -8,6 +8,7 @@ export default function Popup() {
   const currentStatus = useAppState((state) => state.status)
   const currentAction = useAppState((state) => state.action)
   const currentPlaylistIds = useAppState((state) => state.playlistids)
+  const configPath = useAppState((state) => state.config_path)
 
   async function handleClick(){
     const tab = await Browser.tabs.query({ active: true, currentWindow: true })
@@ -49,9 +50,9 @@ export default function Popup() {
         </div>
       </div>
       <div className="flex flex-row mb-1 h-8 w-full">
-        <div className="flex items-center rounded-l-lg active:bg-slate-500 bg-slate-600 hover:bg-slate-700 w-28 h-8 cursor-pointer justify-center" onClick={handleClick}>{currentAction}</div>
-        <div className="flex w-8 h-8 active:bg-gray-700 bg-gray-800 hover:bg-gray-900 rounded-r-lg items-center" onClick={handleSettingsClick}>
-          <Icon icon="tabler:settings-exclamation" className="w-7 h-7 mx-auto"/>
+        <div className={"flex items-center rounded-l-lg w-28 h-8 justify-center " + (configPath ? "cursor-pointer active:bg-slate-500 bg-slate-600 hover:bg-slate-700" : "bg-slate-800")} onClick={configPath ? handleClick : undefined}>{currentAction}</div>
+        <div className={"flex w-8 h-8 rounded-r-lg items-center " + (configPath ? "active:bg-slate-700 bg-slate-800 hover:bg-slate-900" : "active:bg-red-600 bg-red-700 hover:bg-red-800")} onClick={handleSettingsClick}>
+          <Icon icon={configPath ? "tabler:settings" : "tabler:settings-exclamation"} className="w-7 h-7 mx-auto"/>
         </div>
       </div>
     </main>
