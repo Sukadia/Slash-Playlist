@@ -10,7 +10,7 @@ export interface AppState {
 }
 
 const useAppState = create<AppState>((set) => ({
-    status: "not pissed",
+    status: "Not Fetched",
     action: "Fetch",
     playlistids: [],
 
