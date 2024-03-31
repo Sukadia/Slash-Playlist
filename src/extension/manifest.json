@@ -12,8 +12,10 @@
   ],
 
   "icons": {
-    "32": "icons/32.png",
-    "128": "icons/128.png"
+    "16": "icons/Icon16.png",
+    "48": "icons/Icon48.png",
+    "128": "icons/Icon128.png",
+    "256": "icons/Icon.svg"
   },
 
   "browser_specific_settings": {

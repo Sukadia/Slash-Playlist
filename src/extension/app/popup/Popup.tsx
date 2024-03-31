@@ -43,7 +43,7 @@ export default function Popup() {
   return (
     <main className="flex flex-col gap-1 p-2 select-none w-40">
       <div className="flex flex-col items-center mx-auto justify-center gap-1 mb-1">
-        <img src="../icons/128.png" width={128} height={128} alt="Sukadia logo" className="w-16 h-16"/>
+        <img src="../icons/Icon.svg" width={128} height={128} alt="Sukadia logo" className="w-16 h-16"/>
         <div className="flex flex-row text-xs gap-1">
           <div>Status:</div>
           <div className="text-yellow-400">{currentStatus}</div>

@@ -1,4 +1,8 @@
 
+<p align="center">
+    <img src="./src/extension/icons/Icon.svg" alt="Slash Playlist Icon" width="128rem"/>
+</p>
+
 # Slash Playlist
 A web extension and program using yt-dlp to download YT playlists and sort them into directories based on name.
 
