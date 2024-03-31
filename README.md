@@ -1,11 +1,10 @@
 
 <p align="center">
-    <img src="./src/extension/icons/Icon.svg" alt="Slash Playlist Icon" width="128rem"/>
+    <img src="./src/extension/icons/IconTitle.svg" alt="Slash Playlist Icon" height="128rem"/>
 </p>
-
-# Slash Playlist
+<h4 align="center">
 A web extension and program using yt-dlp to download YT playlists and sort them into directories based on name.
-
+</h4>
 This repo is split between two projects:
 
 - `src/extension` - A Node.js React web extension, built with webpack.
