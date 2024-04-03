@@ -3,20 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@types/react": "^18.2.67",
-    "@types/react-dom": "^18.2.22",
-    "@types/webextension-polyfill": "^0.10.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "typescript": "^5.4.2",
     "webextension-polyfill": "^0.10.0",
     "zustand": "^4.5.2"
   },
   "scripts": {
     "extension-dev": "cd src/extension && webpack -w --config webpack.config.ts",
     "extension-build": "cd src/extension && webpack --config webpack.config.ts",
-    "program-dev": "cd src/program && cargo run --target-dir ../../dist/program",
-    "program-build": "cd src/program && cargo build --target-dir ../../dist/program"
+    "program-dev": "cd src/program && nodemon -e rs --watch src --exec cargo run --target-dir ../../dist/program",
+    "program-build": "cd src/program && cargo build --target-dir ../../dist/program",
+    "dev": "concurrently -n EXT,PRO -c cyan,magenta \"npm run extension-dev\" \"npm run program-dev\""
   },
   "eslintConfig": {
     "extends": [
@@ -39,12 +36,17 @@
     "@iconify/react": "^4.1.1",
     "@types/fork-ts-checker-webpack-plugin": "^0.4.5",
     "@types/node": "^20.11.30",
+    "@types/react": "^18.2.67",
+    "@types/react-dom": "^18.2.22",
+    "@types/webextension-polyfill": "^0.10.7",
     "@types/webpack": "^5.28.5",
     "autoprefixer": "^10.4.18",
+    "concurrently": "^8.2.2",
     "copy-webpack-plugin": "^12.0.2",
     "css-loader": "^6.10.0",
     "fork-ts-checker-webpack-plugin": "^9.0.2",
     "html-webpack-plugin": "^5.6.0",
+    "nodemon": "^3.1.0",
     "postcss": "^8.4.37",
     "postcss-loader": "^8.1.1",
     "style-loader": "^3.3.4",
@@ -52,6 +54,7 @@
     "ts-loader": "^9.5.1",
     "ts-node": "^10.9.2",
     "tsx": "^4.7.1",
+    "typescript": "^5.4.2",
     "webpack": "^5.90.3",
     "webpack-cli": "^5.1.4"
   }

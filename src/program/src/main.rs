@@ -1,11 +1,13 @@
+use id3::frame::Comment;
 use rouille::Response;
 use std::process::Command;
 use serde::Deserialize;
 use serde_json::Value;
 use std::io::{Read, Seek, SeekFrom, Write};
-use std::fs::{self, OpenOptions};
+use std::fs::{create_dir_all, read_dir, remove_file, OpenOptions};
 use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
+use id3::{Content, Frame, Tag, TagLike};
 
 #[derive(Deserialize)]
 struct RequestBody {
@@ -14,7 +16,7 @@ struct RequestBody {
 }
 
 fn main() {
-    rayon::ThreadPoolBuilder::new().num_threads(10).build_global().unwrap();
+    rayon::ThreadPoolBuilder::new().num_threads(10).build().unwrap();
 
     rouille::start_server("localhost:33346", move |request| {
         // localhost:33346/download to trigger playlist download
@@ -36,9 +38,13 @@ fn main() {
                 }
             };
 
+            // TODO: Branch off here and call the rest as a function
+
+            println!("\nSyncing {} playlists...\n",body.playlistids.len());
+
             // Get or create music directory & log file
             let musicdirectory = body.config_path;
-            fs::create_dir_all(&musicdirectory).expect("Failed to get Music directory");
+            create_dir_all(&musicdirectory).expect("Failed to get Music directory");
             let mut logfile = OpenOptions::new().write(true).read(true).create(true).open(format!("{}/{}",&musicdirectory,".log.json")).expect("Failed to open log file");
             let logtext = &mut String::new();
             logfile.read_to_string(logtext).expect("Failed to read log file");
@@ -80,34 +86,77 @@ fn main() {
                 let downloadedids = downloadedvalue.as_array().unwrap();
 
                 // Delete videos no longer in YT playlist
-                for videoid in downloadedids.iter() {
-                    if !downloadedids.contains(videoid) {
-                        // TODO: Find file with metadata and delete, then remove from logdata
-                        println!("- Removed {}",videoid);
+                for videoidvalue in downloadedids.iter() {
+                    let videoid = videoidvalue.as_str().unwrap();
+                    if !playlistentries.iter().any(|entry| entry["id"] == videoid) {
+                        let directory = read_dir(format!("{}{}",musicdirectory,playlisttitle));
+                        let mut foundfile = false;
+                        if let Ok(files) = directory {
+                            for file in files {
+                                if let Ok(file) = file {
+                                    let tags = Tag::read_from_path(file.path());
+                                    if let Ok(tags) = tags {
+                                        println!("{}",tags.comments().count());
+                                        if tags.comments().any(|v| v.text == videoid){
+                                            foundfile = true;
+                                            println!("- Removed [https://www.youtube.com/watch?v={}]",videoid);
+                                            let _ = remove_file(file.path());
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // Remove videoid from logdata
+                        let mut dataguard = newlogdata.lock().unwrap();
+                        let entry = dataguard.entry(playlisttitle).or_insert_with(|| serde_json::json!([]));
+                        let array = entry.as_array_mut().unwrap();
+                        let index = array.iter().position(|id| id.as_str() == Some(videoid)).unwrap();
+                        array.swap_remove(index);
+
+                        if !foundfile {
+                            println!("- Removed [https://www.youtube.com/watch?v={}] from logfile, couldn't find on disk",videoid);
+                        }
                     }
                 }
 
                 // Download videos that aren't on disk
                 playlistentries.into_par_iter().for_each(|entry| {
                     let videoidvalue = &entry["id"];
-                    let videoid = videoidvalue.as_str().unwrap();
+                    let videoid = videoidvalue.as_str().unwrap().to_string();
                     let outputarg = format!("{}{}/{}", &musicdirectory, playlisttitle, "[%(uploader)s] %(title)s.%(ext)s");
                     if !downloadedids.contains(videoidvalue) {
+                        // Download the video as mp3
                         let output = Command::new("yt-dlp")
+                            .arg("--print").arg("filename")
+                            .arg("--no-simulate")
                             .arg("-x")
                             .arg("--audio-format").arg("mp3")
                             .arg("--output").arg(&outputarg)
-                            // BUG: Video ID not being placed in file metadata
-                            .arg("--parse-metadata").arg(format!("\"{}:%(meta_comment)s\"",&videoid)) 
+                            .arg("--embed-metadata")
                             .arg(format!("https://www.youtube.com/watch?v={}",&videoid))
                             .output();
 
                         if let Ok(output) = output {
                             if output.status.success() {
-                                println!("- Downloaded {}",&entry["title"]);
+                                let filepath = String::from_utf8(output.stdout).unwrap().replace(".webm\n", ".mp3").to_string();
+
+                                // Write videoid to metadata; required since ffmpeg doesn't do it properly (https://stackoverflow.com/a/61991841)
+                                let mut tags = Tag::read_from_path(&filepath).expect("No file found");
+                                tags.add_frame(Frame::with_content("COMM", Content::Comment(Comment{
+                                    lang: "eng".to_owned(),
+                                    description: "videoid".to_owned(),
+                                    text: videoid
+                                })));
+                                tags.write_to_path(&filepath, id3::Version::Id3v24).expect("Couldn't write ID tag");
+
+                                // Add videoid to logdata
                                 let mut dataguard = newlogdata.lock().unwrap();
-                                let entry = dataguard.entry(playlisttitle).or_insert_with(|| serde_json::json!([]));
-                                entry.as_array_mut().unwrap().push(videoidvalue.clone());
+                                let logentry = dataguard.entry(playlisttitle).or_insert_with(|| serde_json::json!([]));
+                                logentry.as_array_mut().unwrap().push(videoidvalue.clone());
+
+                                println!("- Downloaded {}",&entry["title"]);
                             } else {
                                 println!("- Failed downloading {}",&entry["title"]);
                                 eprintln!("{}", String::from_utf8(output.stderr).unwrap());
@@ -125,8 +174,12 @@ fn main() {
 
             // Write over .log.json with new data
             let newdata = newlogdata.lock().unwrap().to_owned();
+            let bytes = serde_json::to_string(&newdata).unwrap();
+            logfile.set_len(bytes.len().try_into().unwrap()).expect("Failed to resize log file");
             logfile.seek(SeekFrom::Start(0)).expect("Failed to return to beginning of file");
-            let _ = logfile.write_all(serde_json::to_string(&newdata).unwrap().as_bytes());
+            logfile.write_all(bytes.as_bytes()).expect("Faield to write to log file");
+            
+            println!("Finished syncing playlists.");
 
             // Respond with success message
             Response::text("Download started for all URLs")
