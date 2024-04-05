@@ -1,6 +1,6 @@
 use std::process::Command;
 
-pub fn check_version(commandname: String, args: Vec<String>, filterop: Option<&dyn Fn(String) -> String>){
+pub fn check_version(commandname: String, args: Vec<&str>, filterop: Option<&dyn Fn(String) -> String>){
     let filter = filterop.unwrap_or(&|s| s);
 
     let output = Command::new(&commandname)
