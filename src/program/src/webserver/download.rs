@@ -97,47 +97,54 @@ pub fn start(body: RequestBody){
         playlistentries.into_par_iter().for_each(|entry| {
             let videoidvalue = &entry["id"];
             let videoid = videoidvalue.as_str().unwrap().to_string();
-            let outputarg = format!("{}{}/{}", &musicdirectory, playlisttitle, "[%(uploader)s] %(title)s.%(ext)s");
-            if !downloadedids.contains(videoidvalue) {
-                // Download the video as mp3
-                let output = Command::new("yt-dlp")
-                    .arg("--print").arg("filename")
-                    .arg("--no-simulate")
-                    .arg("-x")
-                    .arg("--audio-format").arg("mp3")
-                    .arg("--output").arg(&outputarg)
-                    .arg("--embed-metadata")
-                    .arg(format!("https://www.youtube.com/watch?v={}",&videoid))
-                    .output();
+            let namearg = format!("{}{}/{}", &musicdirectory, playlisttitle, "[%(uploader)s] %(title)s");
+            let outputarg = format!("{}{}", &namearg, ".%(ext)s");
 
-                if let Ok(output) = output {
-                    if output.status.success() {
-                        let filepath = String::from_utf8(output.stdout).unwrap().replace(".webm\n", ".mp3").to_string();
-
-                        // Write videoid to metadata; required since ffmpeg doesn't do it properly (https://stackoverflow.com/a/61991841)
-                        let mut tags = Tag::read_from_path(&filepath).expect("No file found");
-                        tags.add_frame(Frame::with_content("COMM", Content::Comment(Comment{
-                            lang: "eng".to_owned(),
-                            description: "videoid".to_owned(),
-                            text: videoid
-                        })));
-                        tags.write_to_path(&filepath, id3::Version::Id3v24).expect("Couldn't write ID tag");
-
-                        // Add videoid to logdata
-                        let mut dataguard = newlogdata.lock().unwrap();
-                        let logentry = dataguard.entry(playlisttitle).or_insert_with(|| serde_json::json!([]));
-                        logentry.as_array_mut().unwrap().push(videoidvalue.clone());
-
-                        println!("- Downloaded {}",&entry["title"]);
-                    } else {
-                        println!("- Failed downloading {}",&entry["title"]);
-                        eprintln!("{}", String::from_utf8(output.stderr).unwrap());
-                    }
-                } else {
-                    eprintln!("- Failed to execute yt-dlp command");
-                }
-            } else {
+            // Skip if already downloaded
+            if downloadedids.contains(videoidvalue) {
                 println!("- Already downloaded {}",&entry["title"]);
+                return;
+            }
+
+            // Download the video as mp3
+            let output = Command::new("yt-dlp")
+            .arg("--print").arg("after_move:filepath")
+            .arg("--no-simulate")
+            .arg("-x")
+            .arg("--audio-format").arg("mp3")
+            .arg("--output").arg(&outputarg)
+            .arg("--restrict-filename")
+            .arg("--embed-metadata")
+            .arg(format!("https://www.youtube.com/watch?v={}",&videoid))
+            .output();
+
+            if let Ok(output) = output {
+                if !output.status.success() {
+                    println!("- Failed downloading {}",&entry["title"]);
+                    eprintln!("{}", String::from_utf8(output.stderr).unwrap());
+                    return;
+                }
+
+                // BUG: Need --restrict-filename because from_utf8 seems to not handle colons in title properly (yt-dlp fullwidths to ： but it's just gone in the string)
+                let filepath = String::from_utf8(output.stdout).unwrap().replace("\n", "");
+                let mut tags = Tag::read_from_path(&filepath).unwrap();
+
+                // Write videoid to metadata; required since ffmpeg doesn't do it properly (https://stackoverflow.com/a/61991841)
+                tags.add_frame(Frame::with_content("COMM", Content::Comment(Comment{
+                    lang: "eng".to_owned(),
+                    description: "videoid".to_owned(),
+                    text: videoid
+                })));
+                tags.write_to_path(&filepath, id3::Version::Id3v24).expect("Couldn't write ID tag");
+
+                // Add videoid to logdata
+                let mut dataguard = newlogdata.lock().unwrap();
+                let logentry = dataguard.entry(playlisttitle).or_insert_with(|| serde_json::json!([]));
+                logentry.as_array_mut().unwrap().push(videoidvalue.clone());
+
+                println!("- Downloaded {}",&entry["title"]);
+            } else {
+                eprintln!("- Failed to execute yt-dlp command");
             }
         });
 
@@ -149,7 +156,7 @@ pub fn start(body: RequestBody){
     let bytes = serde_json::to_string(&newdata).unwrap();
     logfile.set_len(bytes.len().try_into().unwrap()).expect("Failed to resize log file");
     logfile.seek(SeekFrom::Start(0)).expect("Failed to return to beginning of file");
-    logfile.write_all(bytes.as_bytes()).expect("Faield to write to log file");
+    logfile.write_all(bytes.as_bytes()).expect("Failed to write to log file");
     
     println!("Finished syncing playlists.");
 }
