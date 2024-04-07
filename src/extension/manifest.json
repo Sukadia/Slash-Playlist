@@ -3,7 +3,7 @@
   "name": "Slash Playlist",
   "description": "Download Youtube playlists into organized folders.",
   "author": "Sukadia",
-  "version": "0.2.0",
+  "version": "0.2.1",
   
   "permissions": ["storage"],
 
